@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import api from '../utils/api';
-import AnimatedPage, { AnimatedSection } from '../components/ui/AnimatedPage';
+import AnimatedPage, { AnimatedSection, AnimatedButton, SkeletonCard } from '../components/ui/AnimatedPage';
 import { cardVariants, listVariants, springTransition } from '../utils/motion';
 
 /* ─── tiny in-page toast ─────────────────────────────────────────── */
@@ -258,24 +258,23 @@ const EventManagement = () => {
             Submit events for admin approval and track their review status here.
           </p>
         </div>
-        <motion.button
+        <AnimatedButton
           onClick={openCreateModal}
-          className="bg-primary text-primary-foreground flex items-center gap-2 px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-          whileHover={{ y: -2, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          transition={springTransition}
+          className="btn-glow bg-primary text-primary-foreground flex items-center gap-2 px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Create Event
-        </motion.button>
+        </AnimatedButton>
       </AnimatedSection>
 
       {/* ── Event Grid ─────────────────────────────────────────── */}
       {loading ? (
-        <AnimatedSection className="panel-card flex flex-col items-center gap-3 p-12 text-center text-muted-foreground">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading events…
-        </AnimatedSection>
+        /* ── Skeleton grid instead of blank/spinner ─────────────── */
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <SkeletonCard key={i} lines={3} className="h-64" />
+          ))}
+        </div>
       ) : loadError ? (
         <AnimatedSection className="panel-card flex flex-col items-center gap-4 p-12 text-center text-muted-foreground">
           <p className="font-medium text-foreground">Events could not be loaded</p>
@@ -315,24 +314,36 @@ const EventManagement = () => {
                 onClick={() => setViewEvent(event)}
                 className="group flex cursor-pointer flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[#161616]/95 shadow-[0_16px_40px_rgba(0,0,0,0.28)]"
                 variants={cardVariants}
-                initial="initial"
-                animate="animate"
-                whileHover={{ y: -8, scale: 1.01, boxShadow: '0 26px 65px rgba(0,0,0,0.38)' }}
-                transition={springTransition}
+                whileHover={{
+                  y: -8,
+                  boxShadow: '0 28px 65px rgba(229,9,20,0.12), 0 12px 30px rgba(0,0,0,0.42)',
+                  transition: { duration: 0.24, ease: 'easeOut' },
+                }}
+                style={{ willChange: 'transform' }}
               >
-                {/* Thumbnail */}
+                {/* ── Thumbnail with overlay ──────────────────────── */}
                 <div className="relative h-48 w-full overflow-hidden bg-muted">
                   {event.images && event.images.length > 0 ? (
-                    <motion.img src={event.images[0]} alt={title} className="h-full w-full object-cover" whileHover={{ scale: 1.06 }} transition={{ duration: 0.45 }} />
+                    <motion.img
+                      src={event.images[0]}
+                      alt={title}
+                      className="h-full w-full object-cover"
+                      whileHover={{ scale: 1.07 }}
+                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ willChange: 'transform' }}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-primary/30 text-5xl font-bold bg-primary/5">
                       {initial}
                     </div>
                   )}
 
-                  {/* Price badge */}
+                  {/* Gradient overlay — animates in on group-hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  {/* Price badge with subtle pulse */}
                   <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-background/90 backdrop-blur-sm shadow-sm text-foreground">
+                    <span className="badge-pulse px-3 py-1 rounded-full text-xs font-semibold border bg-background/90 backdrop-blur-sm shadow-sm text-foreground">
                       ₹{price}
                     </span>
                   </div>
@@ -340,14 +351,14 @@ const EventManagement = () => {
                   {/* Status badge */}
                   {event.status && (
                     <div className="absolute top-3 right-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm shadow-sm ${statusStyle(event.status)}`}>
+                      <span className={`badge-pulse px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm shadow-sm ${statusStyle(event.status)}`}>
                         {event.status}
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Body */}
+                {/* ── Card Body ──────────────────────────────────── */}
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-semibold text-lg line-clamp-1 flex-1 pr-2">
@@ -375,22 +386,28 @@ const EventManagement = () => {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="mt-5 pt-4 border-t border-border flex gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                    <button
+                  {/* ── Action Buttons ─────────────────────────── */}
+                  <div className="mt-5 pt-4 border-t border-border flex gap-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
+                    <motion.button
                       onClick={(e) => { e.stopPropagation(); handleEdit(event); }}
                       className="p-2 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors text-muted-foreground"
                       title="Edit"
+                      whileHover={{ scale: 1.15 }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={springTransition}
                     >
                       <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={(e) => { e.stopPropagation(); handleDelete(event._id); }}
                       className="p-2 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors text-muted-foreground"
                       title="Delete"
+                      whileHover={{ scale: 1.15, rotate: 8 }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={springTransition}
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               </motion.div>
