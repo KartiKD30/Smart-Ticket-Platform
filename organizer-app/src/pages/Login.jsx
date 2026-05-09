@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import api from '../utils/api';
+import { logNavigation } from '../utils/navigation';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ const Login = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const from = location.state?.from?.pathname || '/';
+
+  useEffect(() => {
+    // Initial mount logic
+  }, [location.pathname, from]);
 
   const handleChange = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -60,7 +65,7 @@ const Login = () => {
           </div>
           <h1 className="mt-6 text-4xl font-bold tracking-tight lg:text-5xl">Run events from a darker, sharper control room.</h1>
           <p className="mt-4 max-w-xl text-white/72">
-            Manage approvals, revenue, promos, and live operations./
+            Manage approvals, revenue, promos, and live operations.
           </p>
           <div className="mt-8 rounded-[28px] border border-white/10 bg-white/8 p-5">
             <p className="text-xs uppercase tracking-[0.28em] text-white/45">Dev Login</p>

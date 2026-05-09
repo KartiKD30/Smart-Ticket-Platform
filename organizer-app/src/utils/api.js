@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { safeRedirect } from './navigation';
+
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -27,11 +29,12 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            console.warn('[API] 401 Unauthorized detected. Session may have expired. Redirecting to login...');
             localStorage.removeItem('access');
             localStorage.removeItem('token');
             localStorage.removeItem('username');
             localStorage.removeItem('role');
-            window.location.href = '/login';
+            safeRedirect('/login', '401 Unauthorized');
         }
         return Promise.reject(error);
     }
