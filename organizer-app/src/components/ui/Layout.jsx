@@ -1,28 +1,12 @@
 import React from 'react';
-import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate, Outlet } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Bell, LogOut } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { springTransition } from '../../utils/motion';
 
-/* Page transition variants — fade + slight translateY, no blur to avoid GPU cost */
-const pageTransitionVariants = {
-  initial: { opacity: 0, y: 14 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    opacity: 0,
-    y: -10,
-    transition: { duration: 0.2, ease: [0.4, 0, 1, 1] },
-  },
-};
-
 const Layout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const username = localStorage.getItem('username') || 'Organizer';
 
   const handleLogout = () => {
@@ -37,7 +21,6 @@ const Layout = () => {
     <div className="min-h-screen lg:flex">
       <Sidebar />
       <main className="flex-1 p-4 lg:p-5" style={{ minWidth: 0 }}>
-        {/* ── Header ─────────────────────────────────────────────────── */}
         <motion.header
           className="panel-header mb-6 flex flex-col gap-4 px-5 py-5 lg:flex-row lg:items-center lg:justify-between lg:px-7"
           initial={{ opacity: 0, y: -18 }}
@@ -85,21 +68,9 @@ const Layout = () => {
           </div>
         </motion.header>
 
-        {/* ── Page Content with AnimatePresence ─────────────────────── */}
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            variants={pageTransitionVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            style={{ willChange: 'opacity, transform' }}
-          >
-            <div className="panel-surface p-5 lg:p-7">
-              <Outlet />
-            </div>
-          </motion.div>
-        </AnimatePresence>
+        <div className="panel-surface p-5 lg:p-7">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

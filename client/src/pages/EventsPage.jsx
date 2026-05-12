@@ -19,6 +19,9 @@ import {
     Ticket
 } from 'lucide-react';
 
+const getEventPoster = (event) =>
+    event?.imageUrl || event?.image || event?.poster || event?.images?.[0] || '';
+
 const EventsPage = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -206,11 +209,56 @@ const EventsPage = () => {
                                 <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No events found. Start by creating one.</td>
                             </tr>
                         ) : (
-                            events.map((event) => (
+                            events.map((event) => {
+                                const poster = getEventPoster(event);
+
+                                return (
                                 <tr key={event._id}>
                                     <td>
-                                        <div style={{ fontWeight: '700', fontSize: '15px', color: 'white' }}>{event.title}</div>
-                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{event.category}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '220px' }}>
+                                            {poster ? (
+                                                <img
+                                                    src={poster}
+                                                    alt={`${event.title} poster`}
+                                                    style={{
+                                                        width: '46px',
+                                                        height: '62px',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid var(--border)',
+                                                        flexShrink: 0,
+                                                        background: 'rgba(255,255,255,0.04)'
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    aria-hidden="true"
+                                                    style={{
+                                                        width: '46px',
+                                                        height: '62px',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid var(--border)',
+                                                        background: 'linear-gradient(135deg, rgba(248,68,100,0.28), rgba(255,255,255,0.06))',
+                                                        color: 'white',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '18px',
+                                                        fontWeight: '800',
+                                                        flexShrink: 0
+                                                    }}
+                                                >
+                                                    {(event.title || 'E').charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <div style={{ fontWeight: '700', fontSize: '15px', color: 'white' }}>{event.title}</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{event.category}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -298,7 +346,8 @@ const EventsPage = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ))
+                            );
+                            })
                         )}
                     </tbody>
                 </table>

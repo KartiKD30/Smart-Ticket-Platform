@@ -99,3 +99,13 @@ jspm_packages/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# Custom project ignores
+*.log
+.npm-cache/
+uploads/
+
+# Optional
+*.png
+*.jpg
