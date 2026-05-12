@@ -1,142 +1,199 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import API from "../services/api";
 import "../css/Login.css";
 
 function AuthLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Start on signup panel if navigated to /signup
+  const [toggled, setToggled] = useState(location.pathname === "/signup");
+
+  // Login state
+  const [loginForm, setLoginForm] = useState({ identifier: "", password: "" });
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [showLoginPw, setShowLoginPw] = useState(false);
+
+  // Signup state
+  const [signupForm, setSignupForm] = useState({ username: "", email: "", phone: "", password: "", otp: "" });
+  const [signupStep, setSignupStep] = useState(1);
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [showSignupPw, setShowSignupPw] = useState(false);
   const [role, setRole] = useState("user");
-  const [form, setForm] = useState({ identifier: "", password: "" });
-  const [remember, setRemember] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const rememberedUsername = localStorage.getItem("rememberedUsername");
-    if (rememberedUsername) {
-      setForm((current) => ({ ...current, identifier: rememberedUsername }));
-      setRemember(true);
-    }
-  }, []);
+    setToggled(location.pathname === "/signup");
+  }, [location.pathname]);
 
-  const setAccountType = (nextRole) => {
-    setRole(nextRole);
-    setError("");
-  };
-
-  const login = async () => {
-    if (!form.identifier || !form.password) {
-      setError("Please enter your username/email and password.");
-      return;
-    }
-
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!loginForm.identifier || !loginForm.password) { toast.error("Please fill all fields."); return; }
     try {
-      setError("");
-      setLoading(true);
-
-      const endpoint = role === "admin" ? "/auth/admin/login" : "/auth/login/";
-      const res = await API.post(endpoint, {
-        username: form.identifier,
-        password: form.password,
-      });
-
-      const returnedRole = res.data.role || role;
-      if (role !== "admin" && returnedRole !== role) {
-        setError(`This login is only for ${role} accounts.`);
-        return;
-      }
-
+      setLoginLoading(true);
+      const res = await API.post("/auth/login/", { username: loginForm.identifier, password: loginForm.password });
       localStorage.setItem("access", res.data.access);
-      localStorage.setItem("token", res.data.access);
-      localStorage.setItem("username", res.data.username || form.identifier);
-      localStorage.setItem("role", returnedRole);
-
-      if (remember) {
-        localStorage.setItem("rememberedUsername", form.identifier);
-      } else {
-        localStorage.removeItem("rememberedUsername");
-      }
-
-      toast.success("Login successful! Redirecting...");
-
-      if (returnedRole === "admin") {
-        window.location.href = "http://localhost:3001";
-        return;
-      }
-
-      if (returnedRole === "organizer") {
-        window.location.href = "http://localhost:3002";
-        return;
-      }
-
+      localStorage.setItem("username", res.data.username || loginForm.identifier);
+      toast.success("Login successful!");
       setTimeout(() => navigate("/dashboard"), 500);
     } catch (err) {
-      setError(err.response?.data?.error || "Invalid username or password. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      toast.error(err.response?.data?.error || "Invalid credentials.");
+    } finally { setLoginLoading(false); }
   };
 
+  const handleSignupStep1 = async (e) => {
+    e.preventDefault();
+    if (!signupForm.username || !signupForm.email || !signupForm.password) { toast.error("Please fill all fields."); return; }
+    try {
+      setSignupLoading(true);
+      const endpoint = role === "organizer" ? "/auth/organizer/signup/" : "/auth/signup/";
+      await API.post(endpoint, { username: signupForm.username, email: signupForm.email, phone: signupForm.phone, password: signupForm.password });
+      toast.success("OTP sent to your email!");
+      setSignupStep(2);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Registration failed.");
+    } finally { setSignupLoading(false); }
+  };
+
+  const handleSignupStep2 = async (e) => {
+    e.preventDefault();
+    if (signupForm.otp.length !== 6) { toast.error("Enter 6-digit OTP."); return; }
+    try {
+      setSignupLoading(true);
+      const res = await API.post("/auth/verify-otp/", { username: signupForm.username, otp: signupForm.otp });
+      localStorage.setItem("access", res.data.access);
+      localStorage.setItem("username", res.data.username || signupForm.username);
+      localStorage.setItem("role", res.data.role || "user");
+      toast.success("Account created!");
+      setTimeout(() => navigate("/dashboard"), 500);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Verification failed.");
+    } finally { setSignupLoading(false); }
+  };
+
+  const switchToSignup = (e) => { e.preventDefault(); setToggled(true); navigate("/signup"); };
+  const switchToLogin  = (e) => { e.preventDefault(); setToggled(false); navigate("/login"); };
+
   return (
-    <div className="auth-page login-page auth-shell">
-      <div className="auth-shell__panel">
-        <div className="auth-shell__brand">Ticket Seer</div>
-        <h2>Welcome Back</h2>
-        <p>Login to your account to continue</p>
+    <div className="sl-page">
+      <div className={`sl-wrapper${toggled ? " sl-toggled" : ""}`}>
 
-        <div className="tabs" role="tablist" aria-label="Account type">
-          {["user", "organizer", "admin"].map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`tab ${role === item ? "active" : ""}`}
-              onClick={() => setAccountType(item)}
-            >
-              {item.charAt(0).toUpperCase() + item.slice(1)}
-            </button>
-          ))}
+        {/* Animated background shapes */}
+        <div className="sl-shape sl-shape--bg" />
+        <div className="sl-shape sl-shape--sec" />
+
+        {/* ── LOGIN PANEL ── */}
+        <div className="sl-panel sl-panel--login">
+          <h2 className="sl-el">Sign In</h2>
+          <form onSubmit={handleLogin}>
+            <div className="sl-field sl-el">
+              <input type="text" required value={loginForm.identifier}
+                onChange={e => setLoginForm({...loginForm, identifier: e.target.value})} />
+              <label>Username or Email</label>
+              <i className="sl-icon">👤</i>
+            </div>
+            <div className="sl-field sl-el">
+              <input type={showLoginPw ? "text" : "password"} required value={loginForm.password}
+                onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
+              <label>Password</label>
+              <button type="button" className="sl-eye" onClick={() => setShowLoginPw(v=>!v)}>
+                {showLoginPw ? "🙈" : "👁"}
+              </button>
+            </div>
+            <div className="sl-field sl-el">
+              <button className="sl-btn" type="submit" disabled={loginLoading}>
+                {loginLoading ? "Signing in..." : "Sign In"}
+              </button>
+            </div>
+            <div className="sl-switch sl-el">
+              <p>Don't have an account?<br />
+                <a href="/signup" onClick={switchToSignup}>Create Account</a>
+              </p>
+            </div>
+          </form>
         </div>
 
-        <input
-          type="text"
-          placeholder="Username or email"
-          value={form.identifier}
-          onChange={(event) => setForm({ ...form, identifier: event.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={(event) => setForm({ ...form, password: event.target.value })}
-          onKeyDown={(event) => event.key === "Enter" && login()}
-        />
-
-        <div className="auth-options">
-          <label>
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(event) => setRemember(event.target.checked)}
-            />{" "}
-            Remember me
-          </label>
-          <button type="button" className="link-button" onClick={() => navigate("/forgot-password")}>
-            Forgot password?
-          </button>
-        </div>
-
-        <button className="auth-submit" type="button" onClick={login} disabled={loading}>
-          {loading ? "Processing..." : "Login"}
-        </button>
-
-        {error && <div className="message error">{error}</div>}
-
-        {role !== "admin" && (
-          <div className="link" onClick={() => navigate("/signup")}>
-            Don't have an account? Register
+        {/* ── LOGIN WELCOME ── */}
+        <div className="sl-welcome sl-welcome--login">
+          <div className="sl-welcome__inner">
+            <span className="sl-welcome__logo sl-el">ST</span>
+            <h2 className="sl-el">Welcome<br />Back!</h2>
+            <p className="sl-el">Sign in to access your tickets, bookings and wallet.</p>
           </div>
-        )}
+        </div>
+
+        {/* ── SIGNUP PANEL ── */}
+        <div className="sl-panel sl-panel--signup">
+          <h2 className="sl-el">{signupStep === 1 ? "Create Account" : "Verify OTP"}</h2>
+
+          {signupStep === 1 ? (
+            <form onSubmit={handleSignupStep1}>
+              <div className="sl-tabs sl-el">
+                <button type="button" className={`sl-tab${role==="user"?" sl-tab--active":""}`} onClick={()=>setRole("user")}>🎟 User</button>
+                <button type="button" className={`sl-tab${role==="organizer"?" sl-tab--active":""}`} onClick={()=>setRole("organizer")}>🎪 Organizer</button>
+              </div>
+              <div className="sl-field sl-el">
+                <input type="text" required value={signupForm.username}
+                  onChange={e => setSignupForm({...signupForm, username: e.target.value})} />
+                <label>Username</label>
+                <i className="sl-icon">👤</i>
+              </div>
+              <div className="sl-field sl-el">
+                <input type="email" required value={signupForm.email}
+                  onChange={e => setSignupForm({...signupForm, email: e.target.value})} />
+                <label>Email</label>
+                <i className="sl-icon">✉</i>
+              </div>
+              <div className="sl-field sl-el">
+                <input type={showSignupPw ? "text" : "password"} required value={signupForm.password}
+                  onChange={e => setSignupForm({...signupForm, password: e.target.value})} />
+                <label>Password</label>
+                <button type="button" className="sl-eye" onClick={() => setShowSignupPw(v=>!v)}>
+                  {showSignupPw ? "🙈" : "👁"}
+                </button>
+              </div>
+              <div className="sl-field sl-el">
+                <button className="sl-btn" type="submit" disabled={signupLoading}>
+                  {signupLoading ? "Sending OTP..." : "Create Account"}
+                </button>
+              </div>
+              <div className="sl-switch sl-el">
+                <p>Already have an account?<br />
+                  <a href="/login" onClick={switchToLogin}>Sign In</a>
+                </p>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSignupStep2}>
+              <p className="sl-otp-hint sl-el">Enter the 6-digit OTP sent to {signupForm.email}</p>
+              <div className="sl-field sl-el">
+                <input type="text" required maxLength={6} value={signupForm.otp}
+                  onChange={e => setSignupForm({...signupForm, otp: e.target.value})} />
+                <label>6-digit OTP</label>
+                <i className="sl-icon">🔐</i>
+              </div>
+              <div className="sl-field sl-el">
+                <button className="sl-btn" type="submit" disabled={signupLoading}>
+                  {signupLoading ? "Verifying..." : "Verify & Continue"}
+                </button>
+              </div>
+              <div className="sl-switch sl-el">
+                <p><a href="#" onClick={e=>{e.preventDefault();setSignupStep(1);}}>← Back</a></p>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* ── SIGNUP WELCOME ── */}
+        <div className="sl-welcome sl-welcome--signup">
+          <div className="sl-welcome__inner">
+            <span className="sl-welcome__logo sl-el">ST</span>
+            <h2 className="sl-el">Hello,<br />Friend!</h2>
+            <p className="sl-el">Join thousands of fans booking events across India.</p>
+          </div>
+        </div>
+
       </div>
     </div>
   );
