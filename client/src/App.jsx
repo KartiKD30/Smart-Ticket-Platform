@@ -6,7 +6,6 @@ import './App.css'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Login from './pages/AuthLogin'
-import Signup from './pages/AuthSignup'
 import ForgotPassword from './pages/ForgotPassword'
 import Dashboard from './pages/Dashboard'
 import Events from './pages/Events'
@@ -51,13 +50,17 @@ function ProtectedRoute({ children }) {
 
 function AppRoutes() {
   const location = useLocation()
+  const routeKey = ['/login', '/signup'].includes(location.pathname)
+    ? 'auth'
+    : location.pathname
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location} key={routeKey}>
         <Route path="/" element={<Navigate to="/events" replace />} />
         <Route path="/login" element={<Layout><Login /></Layout>} />
-        <Route path="/signup" element={<Layout><Signup /></Layout>} />
+        <Route path="/signup" element={<Layout><Login /></Layout>} />
+        <Route path="/register" element={<Navigate to="/signup" replace />} />
         <Route path="/forgot-password" element={<Layout><ForgotPassword /></Layout>} />
         <Route path="/events" element={<Layout><Events /></Layout>} />
         <Route path="/help" element={<Layout><Help /></Layout>} />
