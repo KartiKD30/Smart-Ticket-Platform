@@ -211,7 +211,7 @@ export default function ConcertSelection() {
                 seats,
                 total,
                 date: event?.date,
-                time: event?.time,
+                time: event?.time || "TBA",
               },
             });
           }}

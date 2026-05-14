@@ -74,6 +74,7 @@ function AuthLogin() {
 
   const switchToSignup = (e) => { e.preventDefault(); setToggled(true); navigate("/signup"); };
   const switchToLogin  = (e) => { e.preventDefault(); setToggled(false); navigate("/login"); };
+  const continueWithoutSignin = () => navigate("/events");
 
   return (
     <div className="sl-page">
@@ -195,6 +196,10 @@ function AuthLogin() {
         </div>
 
       </div>
+
+      <button className="sl-guest-btn" type="button" onClick={continueWithoutSignin}>
+        Continue without signing in
+      </button>
     </div>
   );
 }

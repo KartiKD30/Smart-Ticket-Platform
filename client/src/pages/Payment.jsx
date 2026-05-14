@@ -33,7 +33,7 @@ export default function Payment() {
   }, []);
 
   useEffect(() => {
-    if (!state?.event?.id) {
+    if (state?.event?.id == null && state?.event?._id == null) {
       setOrganizerPromos([]);
       return;
     }
@@ -41,7 +41,7 @@ export default function Payment() {
     const fetchOrganizerPromos = async () => {
       try {
         const response = await API.get("/promos/available", {
-          params: { eventId: state.event.id },
+          params: { eventId: state.event.id ?? state.event._id },
         });
         setOrganizerPromos(Array.isArray(response.data?.data) ? response.data.data : []);
       } catch (error) {
@@ -73,9 +73,12 @@ export default function Payment() {
   if (!state) return <p>No booking data found.</p>;
 
   const { event, seats, total, date } = state;
+  const normalizedEventId = event?._id ?? event?.id ?? state?.eventId ?? null;
+  const normalizedSeats = Array.isArray(seats) ? seats.filter(Boolean) : seats ? [seats] : [];
   const eventName = event?.name || "Unknown Event";
   const eventCity = event?.city || "Unknown City";
   const showDate = date || event?.date || "TBD";
+  const showTime = state?.time || event?.time || "TBA";
   const seatCount = Array.isArray(seats) ? seats.length : 1;
   const subTotal = total || 0;
   const convenienceFee = Math.round(subTotal * 0.02);
@@ -229,6 +232,11 @@ export default function Payment() {
     e.preventDefault();
     setFormError("");
 
+    if (normalizedEventId == null || normalizedSeats.length === 0 || !showDate || !showTime) {
+      setFormError("Booking details are incomplete. Please go back and select your show and seats again.");
+      return;
+    }
+
     if (!canPay) {
       setFormError("Please complete valid payment details to continue.");
       return;
@@ -248,22 +256,25 @@ export default function Payment() {
     }
 
     try {
-      const payload = {
-        eventId: state.event?._id || state.event?.id,
-        event: {
-          id: state.event?._id || state.event?.id,
-          _id: state.event?._id || state.event?.id,
-          name: eventName,
-          city: eventCity,
-          venue: state.event?.venue,
-          date: showDate,
-          category: state.event?.category,
-          price: state.unitPrice || state.event?.price,
-        },
+      const normalizedEventPayload = {
+        ...(event || {}),
+        id: normalizedEventId,
+        _id: normalizedEventId,
+        name: eventName,
+        city: eventCity,
+        venue: event?.venue,
         date: showDate,
-        seats: Array.isArray(state.seats) ? state.seats : [state.seats],
+        category: event?.category,
+        price: state.unitPrice || event?.price,
+      };
+
+      const payload = {
+        eventId: normalizedEventId,
+        event: normalizedEventPayload,
+        date: showDate,
+        seats: normalizedSeats,
         total: finalAmount,
-        time: state.time || "TBD",
+        time: showTime,
         method: method === "upi" ? "UPI" : method === "card" ? "Card" : "Net Banking",
         transactionId,
         receiptId,

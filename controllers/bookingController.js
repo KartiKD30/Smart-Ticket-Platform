@@ -72,8 +72,8 @@ const autoCompletePassedBookings = async (userId = null) => {
 };
 
 const resolveEventId = async (eventPayload = {}) => {
-  const candidateId = eventPayload.id || eventPayload._id || eventPayload.eventId;
-  if (!candidateId) return null;
+  const candidateId = eventPayload.id ?? eventPayload._id ?? eventPayload.eventId;
+  if (candidateId === undefined || candidateId === null || candidateId === '') return null;
   if (!mongoose.Types.ObjectId.isValid(candidateId)) return null;
 
   const event = await Event.findById(candidateId).select('_id availableTickets totalTickets totalBookings totalRevenue title price');
@@ -139,11 +139,11 @@ const createBooking = async (req, res) => {
 
     const normalizedEvent = {
       ...(event || {}),
-      id: event?.id || event?._id || eventId,
-      _id: event?._id || event?.id || eventId,
+      id: event?.id ?? event?._id ?? eventId,
+      _id: event?._id ?? event?.id ?? eventId,
     };
 
-    if (!normalizedEvent.id || !Array.isArray(seats) || seats.length === 0 || total === undefined || total === null || !date || !time || !method) {
+    if ((normalizedEvent.id === undefined || normalizedEvent.id === null) || !Array.isArray(seats) || seats.length === 0 || total === undefined || total === null || !date || !time || !method) {
       return res.status(400).json({ error: 'Missing required booking fields' });
     }
 
