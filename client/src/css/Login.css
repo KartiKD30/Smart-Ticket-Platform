@@ -1,10 +1,8 @@
 /* ══════════════════════════════════════════════════════
    SMART TICKET  —  Sliding Panel Auth
    Inspired by: reference sliding login/register design
-   Theme: Dark gold (#f5a623) on deep dark (#0a0a0f)
+   Theme: Project red and black theme
    ══════════════════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 /* ── PAGE ────────────────────────────────────────────── */
 .sl-page {
@@ -43,7 +41,7 @@
   pointer-events: none;
 }
 
-/* Primary diagonal shape — gold panel */
+/* Primary diagonal shape — red panel */
 .sl-shape--bg {
   right: 0;
   top: -40px;
@@ -419,7 +417,6 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
   transition: transform .2s ease, background .2s ease, border-color .2s ease;
 }
-
 .sl-guest-btn:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.36);

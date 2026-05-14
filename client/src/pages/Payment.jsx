@@ -357,6 +357,7 @@ export default function Payment() {
                   <label htmlFor="walletAmount">Amount to use from wallet</label>
                   <input
                     id="walletAmount"
+                    className="payment-input"
                     type="number"
                     min="0"
                     max={Math.min(walletBalance, walletEligibleAmount)}
@@ -382,6 +383,7 @@ export default function Payment() {
 
             <div className="payment-coupon-input">
               <input
+                className="payment-input payment-coupon-code-input"
                 type="text"
                 placeholder="Enter coupon code"
                 value={couponCode}
@@ -473,6 +475,7 @@ export default function Payment() {
                 <label htmlFor="upi">UPI ID</label>
                 <input
                   id="upi"
+                  className="payment-input"
                   type="text"
                   placeholder="yourname@upi"
                   value={upiId}
@@ -499,6 +502,7 @@ export default function Payment() {
                   <label htmlFor="cardNo">Card Number</label>
                   <input
                     id="cardNo"
+                    className="payment-input"
                     type="text"
                     placeholder="1234 5678 9012 3456"
                     value={cardNo}
@@ -512,6 +516,7 @@ export default function Payment() {
                     <label htmlFor="expiry">Expiry</label>
                     <input
                       id="expiry"
+                      className="payment-input"
                       type="text"
                       placeholder="MM/YY"
                       value={expiry}
@@ -523,6 +528,7 @@ export default function Payment() {
                     <label htmlFor="cvv">CVV</label>
                     <input
                       id="cvv"
+                      className="payment-input"
                       type="password"
                       placeholder="•••"
                       maxLength={3}
@@ -546,6 +552,7 @@ export default function Payment() {
                 <label htmlFor="bank">Select Bank</label>
                 <select
                   id="bank"
+                  className="payment-input"
                   value={bank}
                   onChange={(e) => setBank(e.target.value)}
                   required
@@ -626,5 +633,4 @@ export default function Payment() {
     </main>
   );
 }
-
 
